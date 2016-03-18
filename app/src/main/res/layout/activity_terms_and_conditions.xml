@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:text="Terms And Conditions"
+        android:textSize="30sp"
+        android:layout_weight="1"
+        android:background="@color/primary"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:text="@string/tnc"
+            />
+    </ScrollView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="10dp"
+        android:background="#C2C2C2"
+        android:textColor="@color/white"
+        android:textSize="14dp"
+        android:textAllCaps="true"
+        android:text="By clicking to Accept, you hereby agree to the terms and conditions mentioned above."
+        />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/tncButton"
+        android:text="Accept"
+        android:textSize="20dp"
+        android:background="@color/primary"
+        android:textColor="@android:color/white"
+        android:layout_weight="1"
+        />
+
+</LinearLayout>

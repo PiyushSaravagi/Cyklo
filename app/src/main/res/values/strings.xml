@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">CYKLO</string>
+    <string name="action_settings">Settings</string>
+    <string-array name="college_names">
+        <item>SPIT</item>
+        <item>SP Jain</item>
+        <item>SPCE</item>
+        <item>Bhavans</item>
+        <item>Others</item>
+    </string-array>
+    <string name="requestUnlock">Request a Cycle</string>
+    <string name="processing">Processing Request</string>
+    <string name="accepted">Request Accepted</string>
+    <string name="requestLock">Return Cycle</string>
+    <string name="detailsWhy">*Details should match the ID you are going to provide</string>
+    <string name="tnc">Please read these terms and conditions prior to using the products and services offered by CYKLO. By using the product, you agree to be legally bound by the terms and conditions and privacy policy and terms of services(including without limitation all disclaimers, exclusion of warranties and limitations of liability contained therein). You also agree to bound by Google’s Terms of Service. If you do not agree with these terms, please do not use the products and services offered by CYKLO.\n\n<b>Privacy Policy:</b>\nWe collect following information when you use the software. Your mobile device\'s hardware information, unique id and personal details. This information will be kept private to CYKLO and will not be disclosed to third parties. We collect this information for authenticity of the user.CYKLO shall not be responsible or liable for any loss or damage of any kind incurred during cycling. Any damage caused to the cycle during the complete duration of  rental will be  compensated by person damaging it without any compromisation. Decision of the keeper is final in case of any dispute regarding time, money, etc. Anyone found guilty of stealing the cycle or any part of it,or any attempt to steal the cycle would be facing dire consequences.⁠⁠ An appropriate fine would be charged for any kind of damage to the cycle.
+You may receive text messages(SMS) or notifications or emails from CYKLO containing new product information, updates, alerts. You agree that messages from CYKLO, received on your registered number will not constitute an unsolicited commercial communication irrespective of their having signed upto any Do Not Call Registry.
+\n\n<b>Information security:</b>\nWe take appropriate security measures to protect against unauthorized access to or unauthorized alteration, disclosure or destruction of data. These include internal reviews of our data collection, storage and processing practices and security measures, including appropriate encryption.
+\n\n<b>Customer Service:</b>\nCYKLO does not take the responsibility for providing any customer service related to software.
+\n\n<b>Changes to the Terms:</b>\nCYKLO may make changes to these Terms from time to time with or without notice. You understand and agree that if you use the product and Services after the date on which these Terms have changed, CYKLO will treat your use as acceptance of the updated terms.
+\n\n<i>All the copyrights of this product are reserved with CYKLO.</i>
+</string>
+    <string name="ratecard">
+        RATE:\n
+        Rs. 10 per 30 minutes.
+    </string>
+</resources>
