@@ -42,13 +42,14 @@ import xyz.cyklo.api.Time;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "CYKLO.MAIN";
+    private static final String EMPTY = "";
+    final String[] SPECIAL_CYCLE_NUMBERS = {"007", "111", "420", "555", "911", "786"};
     State currentState;//intially LOCKED
     boolean success;
     Dialog confirmReturnDialog;
     SharedPreferences details;
     SharedPreferences.Editor editor;
-    private static final String TAG = "CYKLO.MAIN";
-    private static final String EMPTY = "";
     ConnectivityManager connMan;
     NetworkInfo netInfo;
     GifImageView gifCycles;
@@ -58,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
     //Chronometer chronometer;
     Time time;//CYKLO TIME OBJECT
     Amount amount;//CYKLO AMOUNT OBJECT
-    final String[] SPECIAL_CYCLE_NUMBERS = {"007", "111", "420", "555", "911", "786"};
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -114,10 +114,6 @@ public class MainActivity extends AppCompatActivity {
         confirmedRequestLock();
     }
 
-    private enum State {
-        LOCKED, UNLOCKED, ACCEPTED_LOCK, ACCEPTED_UNLOCK, REQUESTED_LOCK, REQUESTED_UNLOCK
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,7 +127,18 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 switch (currentState) {
                     case LOCKED:
-                        requestUnlock();
+                        //Changed by G Buddies on 20-03-2016
+                        Dialog cyclesOptionDialog = new Dialog(MainActivity.this);
+                        cyclesOptionDialog.setContentView(R.layout.dialog_request_cycle);
+                        cyclesOptionDialog.show();
+                        cyclesOptionDialog.findViewById(R.id
+                                .cyklo_original_imageview)
+                                .setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        requestUnlock(0);
+                                    }
+                                });
                         break;
 
                     case UNLOCKED:
@@ -214,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
             tvCycleNumber.setVisibility(View.VISIBLE);
             tvCycleNumber.setText("Cycle Number: ".concat(String.valueOf(cycleNumber)));
             tvUserName.setVisibility(View.VISIBLE);
-            tvUserName.setText("Name: ".concat(details.getString("name","")));
+            tvUserName.setText("Name: ".concat(details.getString("name", "")));
         } else {
             tvCycleNumber.setVisibility(View.INVISIBLE);
             tvUserName.setVisibility(View.INVISIBLE);
@@ -260,9 +267,9 @@ public class MainActivity extends AppCompatActivity {
                 String.valueOf(amount.getAmount()));
 
         //TODO: -------------------------
-        ((TextView) confirmReturnDialog.findViewById(R.id.dialog_return_time)).setText("Time: "+
+        ((TextView) confirmReturnDialog.findViewById(R.id.dialog_return_time)).setText("Time: " +
                 (amount.minutes));
-                confirmReturnDialog.show();
+        confirmReturnDialog.show();
         return true;
     }
 
@@ -309,43 +316,46 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private boolean requestUnlock() {
-        if (!checkConnection()) return false;
-        currentState = State.REQUESTED_UNLOCK;
-        setState(currentState);
+    //Changed by G Buddies on 20-03-2016
+    private boolean requestUnlock(int cycleType) {
+        //Cycle original
+        if (cycleType == 0) {
+            if (!checkConnection()) return false;
+            currentState = State.REQUESTED_UNLOCK;
+            setState(currentState);
 
-        editor.putString("currentState", currentState.toString());
-        editor.commit();
+            editor.putString("currentState", currentState.toString());
+            editor.commit();
 
-        if (!details.getBoolean("saved", false)) {
-            Log.i(TAG, "Details not saved");
-            Toast.makeText(getApplicationContext(), "Details not saved", Toast.LENGTH_SHORT).show();
-            return false;
+            if (!details.getBoolean("saved", false)) {
+                Log.i(TAG, "Details not saved");
+                Toast.makeText(getApplicationContext(), "Details not saved", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            String name = details.getString("name", EMPTY).replace(" ", "%20");
+            String college = details.getString("college", EMPTY);
+            String number = details.getString("number", EMPTY);
+            String email = details.getString("email", EMPTY);
+
+            if (name.length() == 0 || college.length() == 0 || number.length() == 0 || email.length() == 0) {
+                Log.i(TAG, "Details empty");
+                return false;
+            }
+            String requestURL = "http://192.168.1.100:8080/";
+            requestURL += "cyklo/"; // TODO: make cyklo dir changes in server and here
+            requestURL += "res/";
+            requestURL += "request.php?";
+            requestURL += "name=" + name;
+            requestURL += "&college=" + college;
+            requestURL += "&number=" + number;
+            requestURL += "&email=" + email;
+            requestURL += "&lock_state=0";
+
+            Log.i(TAG, requestURL);
+
+            new DownloadTask().execute(requestURL);
         }
-
-        String name = details.getString("name", EMPTY).replace(" ", "%20");
-        String college = details.getString("college", EMPTY);
-        String number = details.getString("number", EMPTY);
-        String email = details.getString("email", EMPTY);
-
-        if (name.length() == 0 || college.length() == 0 || number.length() == 0 || email.length() == 0) {
-            Log.i(TAG, "Details empty");
-            return false;
-        }
-        String requestURL = "http://192.168.1.100:8080/";
-        requestURL += "cyklo/"; // TODO: make cyklo dir changes in server and here
-        requestURL += "res/";
-        requestURL += "request.php?";
-        requestURL += "name=" + name;
-        requestURL += "&college=" + college;
-        requestURL += "&number=" + number;
-        requestURL += "&email=" + email;
-        requestURL += "&lock_state=0";
-
-        Log.i(TAG, requestURL);
-
-        new DownloadTask().execute(requestURL);
-
         return true;
     }
 
@@ -539,6 +549,82 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Initiates the fetch operation.
+     */
+    private String loadFromNetwork(String urlString) throws IOException {
+        InputStream stream = null;
+        String str = "";
+
+        try {
+            stream = downloadUrl(urlString);
+            str = readIt(stream, 500);
+        } finally {
+            if (stream != null) {
+                stream.close();
+            }
+        }
+        return str;
+    }
+
+    /**
+     * Given a string representation of a URL, sets up a connection and gets
+     * an input stream.
+     *
+     * @param urlString A string representation of a URL.
+     * @return An InputStream retrieved from a successful HttpURLConnection.
+     * @throws IOException
+     */
+    private InputStream downloadUrl(String urlString) throws IOException {
+        // BEGIN_INCLUDE(get_inputstream)
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setReadTimeout(10000 /* milliseconds */);
+        conn.setConnectTimeout(15000 /* milliseconds */);
+        conn.setRequestMethod("GET");
+        conn.setDoInput(true);
+        Log.i(TAG, conn.getResponseMessage());
+        // Start the query
+        conn.connect();
+        return conn.getInputStream();
+        // END_INCLUDE(get_inputstream)
+    }
+
+    /**
+     * Reads an InputStream and converts it to a String.
+     *
+     * @param stream InputStream containing HTML from targeted site.
+     * @param len    Length of string that this method returns.
+     * @return String concatenated according to len parameter.
+     * @throws IOException
+     * @throws UnsupportedEncodingException
+     */
+    private String readIt(InputStream stream, int len) throws IOException {
+        Reader reader = new InputStreamReader(stream, "UTF-8");
+        char[] buffer = new char[len];
+        reader.read(buffer);
+        return new String(buffer);
+    }
+
+    // to determine when the user can edit DETAILS
+    public boolean detailsEditable(State s) {
+        switch (s) {
+            case LOCKED:
+                return true;
+            case UNLOCKED:
+            case ACCEPTED_LOCK:
+            case REQUESTED_LOCK:
+            case ACCEPTED_UNLOCK:
+            case REQUESTED_UNLOCK:
+                return false;
+        }
+        return false;
+    }
+
+    private enum State {
+        LOCKED, UNLOCKED, ACCEPTED_LOCK, ACCEPTED_UNLOCK, REQUESTED_LOCK, REQUESTED_UNLOCK
+    }
+
+    /**
      * Implementation of AsyncTask, to fetch the data in the background away from
      * the UI thread.
      */
@@ -610,7 +696,7 @@ public class MainActivity extends AppCompatActivity {
                         editor.commit();
 
                         tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
-                        tvUserName.setText("Name: ".concat(details.getString("name","")));
+                        tvUserName.setText("Name: ".concat(details.getString("name", "")));
                         switch (currentState) {
                             case REQUESTED_UNLOCK:
                                 acceptUnlock();
@@ -633,7 +719,7 @@ public class MainActivity extends AppCompatActivity {
                         int cycleNumber = details.getInt("cycleNumber", 0);
                         if (cycleNumber != 0) {
                             tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
-                            tvUserName.setText("Name: ".concat(details.getString("name","")));
+                            tvUserName.setText("Name: ".concat(details.getString("name", "")));
                         }
                         switch (currentState) {
                             case ACCEPTED_LOCK:
@@ -671,63 +757,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Initiates the fetch operation.
-     */
-    private String loadFromNetwork(String urlString) throws IOException {
-        InputStream stream = null;
-        String str = "";
-
-        try {
-            stream = downloadUrl(urlString);
-            str = readIt(stream, 500);
-        } finally {
-            if (stream != null) {
-                stream.close();
-            }
-        }
-        return str;
-    }
-
-    /**
-     * Given a string representation of a URL, sets up a connection and gets
-     * an input stream.
-     *
-     * @param urlString A string representation of a URL.
-     * @return An InputStream retrieved from a successful HttpURLConnection.
-     * @throws IOException
-     */
-    private InputStream downloadUrl(String urlString) throws IOException {
-        // BEGIN_INCLUDE(get_inputstream)
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        Log.i(TAG, conn.getResponseMessage());
-        // Start the query
-        conn.connect();
-        return conn.getInputStream();
-        // END_INCLUDE(get_inputstream)
-    }
-
-    /**
-     * Reads an InputStream and converts it to a String.
-     *
-     * @param stream InputStream containing HTML from targeted site.
-     * @param len    Length of string that this method returns.
-     * @return String concatenated according to len parameter.
-     * @throws IOException
-     * @throws UnsupportedEncodingException
-     */
-    private String readIt(InputStream stream, int len) throws IOException {
-        Reader reader = new InputStreamReader(stream, "UTF-8");
-        char[] buffer = new char[len];
-        reader.read(buffer);
-        return new String(buffer);
     }
 
     private class AcceptedListener extends Thread {
@@ -778,21 +807,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-    }
-
-    // to determine when the user can edit DETAILS
-    public boolean detailsEditable(State s) {
-        switch (s) {
-            case LOCKED:
-                return true;
-            case UNLOCKED:
-            case ACCEPTED_LOCK:
-            case REQUESTED_LOCK:
-            case ACCEPTED_UNLOCK:
-            case REQUESTED_UNLOCK:
-                return false;
-        }
-        return false;
     }
 
 }
