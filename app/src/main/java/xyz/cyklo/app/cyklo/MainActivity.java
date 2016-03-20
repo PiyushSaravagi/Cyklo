@@ -45,6 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "CYKLO.MAIN";
     private static final String EMPTY = "";
     final String[] SPECIAL_CYCLE_NUMBERS = {"007", "111", "420", "555", "911", "786"};
+
+    //Changed by G Buddies on 20-03-2016
+    final String[] PREMIUM_SPECIAL_CYCLE_NUMBERS = {"CY*14", "CY*22"};
+
     State currentState;//intially LOCKED
     boolean success;
     Dialog confirmReturnDialog;
@@ -128,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (currentState) {
                     case LOCKED:
                         //Changed by G Buddies on 20-03-2016
-                        Dialog cyclesOptionDialog = new Dialog(MainActivity.this);
+                        final Dialog cyclesOptionDialog = new Dialog(MainActivity.this);
                         cyclesOptionDialog.setContentView(R.layout.dialog_request_cycle);
                         cyclesOptionDialog.show();
                         cyclesOptionDialog.findViewById(R.id
@@ -136,7 +140,17 @@ public class MainActivity extends AppCompatActivity {
                                 .setOnClickListener(new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
+                                        cyclesOptionDialog.dismiss();
                                         requestUnlock(0);
+                                    }
+                                });
+                        cyclesOptionDialog.findViewById(R.id
+                                .cyklo_premium_imageview)
+                                .setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        cyclesOptionDialog.dismiss();
+                                        requestUnlock(1);
                                     }
                                 });
                         break;
@@ -318,44 +332,52 @@ public class MainActivity extends AppCompatActivity {
 
     //Changed by G Buddies on 20-03-2016
     private boolean requestUnlock(int cycleType) {
+        if (!checkConnection()) return false;
+        currentState = State.REQUESTED_UNLOCK;
+        setState(currentState);
+
+        editor.putString("currentState", currentState.toString());
+        editor.commit();
+
+        if (!details.getBoolean("saved", false)) {
+            Log.i(TAG, "Details not saved");
+            Toast.makeText(getApplicationContext(), "Details not saved", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        String name = details.getString("name", EMPTY).replace(" ", "%20");
+        String college = details.getString("college", EMPTY);
+        String number = details.getString("number", EMPTY);
+        String email = details.getString("email", EMPTY);
+
+        if (name.length() == 0 || college.length() == 0 || number.length() == 0 || email.length() == 0) {
+            Log.i(TAG, "Details empty");
+            return false;
+        }
+        String requestURL = "http://192.168.1.100:8080/";
+        requestURL += "cyklo/"; // TODO: make cyklo dir changes in server and here
+        requestURL += "res/";
+
+        //Changed by G Buddies on 20-03-2016
         //Cycle original
         if (cycleType == 0) {
-            if (!checkConnection()) return false;
-            currentState = State.REQUESTED_UNLOCK;
-            setState(currentState);
-
-            editor.putString("currentState", currentState.toString());
-            editor.commit();
-
-            if (!details.getBoolean("saved", false)) {
-                Log.i(TAG, "Details not saved");
-                Toast.makeText(getApplicationContext(), "Details not saved", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-
-            String name = details.getString("name", EMPTY).replace(" ", "%20");
-            String college = details.getString("college", EMPTY);
-            String number = details.getString("number", EMPTY);
-            String email = details.getString("email", EMPTY);
-
-            if (name.length() == 0 || college.length() == 0 || number.length() == 0 || email.length() == 0) {
-                Log.i(TAG, "Details empty");
-                return false;
-            }
-            String requestURL = "http://192.168.1.100:8080/";
-            requestURL += "cyklo/"; // TODO: make cyklo dir changes in server and here
-            requestURL += "res/";
             requestURL += "request.php?";
-            requestURL += "name=" + name;
-            requestURL += "&college=" + college;
-            requestURL += "&number=" + number;
-            requestURL += "&email=" + email;
-            requestURL += "&lock_state=0";
-
-            Log.i(TAG, requestURL);
-
-            new DownloadTask().execute(requestURL);
         }
+        //Cycle premium
+        if (cycleType == 1) {
+            //This file is same as request.php
+            requestURL += "request_premium.php?";
+        }
+
+        requestURL += "name=" + name;
+        requestURL += "&college=" + college;
+        requestURL += "&number=" + number;
+        requestURL += "&email=" + email;
+        requestURL += "&lock_state=0";
+
+        Log.i(TAG, requestURL);
+
+        new DownloadTask().execute(requestURL);
         return true;
     }
 

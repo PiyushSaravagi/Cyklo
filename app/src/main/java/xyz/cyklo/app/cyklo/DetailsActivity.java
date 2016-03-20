@@ -18,12 +18,12 @@ import java.util.regex.Pattern;
 
 public class DetailsActivity extends AppCompatActivity {
 
+    private static final String EMPTY = "";
+    private static final String TAG = "CYKLO.DETAILS";
     SharedPreferences details;
     EditText etName, etNumber, etEmail;
     Spinner spinCollege;
     Button btnEdit;
-    private static final String EMPTY = "";
-    private static final String TAG = "CYKLO.DETAILS";
     SharedPreferences.Editor editor;
 
     @Override
@@ -40,6 +40,15 @@ public class DetailsActivity extends AppCompatActivity {
                 }
             }
         });
+        etNumber.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    etName.setTextColor(Color.BLACK);
+                }
+            }
+        });
+
 
         btnEdit.setOnClickListener(new View.OnClickListener() {
             @Override
