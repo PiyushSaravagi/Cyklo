@@ -36,8 +36,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.5"
-            android:text="CYKLO PREMIUM"
-            />
+            android:text="CYKLO PREMIUM" />
 
     </LinearLayout>
 </LinearLayout>
