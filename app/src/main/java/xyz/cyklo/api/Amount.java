@@ -9,11 +9,13 @@ import java.util.Calendar;
  */
 public class Amount extends Time {
     private Time t;
+    private int cycleType;
     private int amount;
     public int minutes;
 
-    public Amount(Time t) {
+    public Amount(Time t,int cycleType) {
         this.t = t;
+        this.cycleType = cycleType;
     }
 
     public int getAmount() {
@@ -31,7 +33,17 @@ public class Amount extends Time {
         Log.i("CYKLO.AMOUNT", "Minutes: ".concat(String.valueOf(minutes)));
         Log.i("CYKLO.AMOUNT", "Diff: ".concat(String.valueOf(t.getTimeDifference())));
         //Rate Card
-        amount = (minutes / 30) * 10 + 10;
+
+        //Changed by G Buddies on 21-03-2016
+        // To determine the amount depending upon the cycle type ( check the rates )
+        if(cycleType == 0){
+            amount = (minutes / 30) * 10 + 10;
+        }
+        else if (cycleType == 1){
+            amount = (minutes / 30) * 10 + 10;
+            amount = amount * 2;
+        }
+
         return amount;
     }
 }

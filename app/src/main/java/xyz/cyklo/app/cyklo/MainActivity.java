@@ -41,6 +41,12 @@ import xyz.cyklo.api.Amount;
 import xyz.cyklo.api.Time;
 
 public class MainActivity extends AppCompatActivity {
+    //Changed by G Buddies on 21-03-2016
+    /*
+    * 0 for original
+    * 1 for premium
+    * */
+    private static int cycleType;
 
     private static final String TAG = "CYKLO.MAIN";
     private static final String EMPTY = "";
@@ -141,7 +147,8 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(View v) {
                                         cyclesOptionDialog.dismiss();
-                                        requestUnlock(0);
+                                        cycleType = 0;
+                                        requestUnlock();
                                     }
                                 });
                         cyclesOptionDialog.findViewById(R.id
@@ -150,7 +157,8 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(View v) {
                                         cyclesOptionDialog.dismiss();
-                                        requestUnlock(1);
+                                        cycleType = 1;
+                                        requestUnlock();
                                     }
                                 });
                         break;
@@ -164,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        amount = new Amount(time);
+        amount = new Amount(time, cycleType);
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Amount:")
                 .setMessage("Rs. ".concat(String.valueOf(amount.getAmount())));
@@ -172,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
         btnAmount.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                amount = new Amount(time);
+                amount = new Amount(time, cycleType);
                 alertDialogBuilder.setMessage("Rs. ".concat(String.valueOf(amount.getAmount())));
                 //Log.i(TAG, String.valueOf(time.getTimeDifference()));
                 AlertDialog alertDialog = alertDialogBuilder.create();
@@ -240,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             tvCycleNumber.setVisibility(View.INVISIBLE);
             tvUserName.setVisibility(View.INVISIBLE);
         }
-        amount = new Amount(time);
+        amount = new Amount(time, cycleType);
 
         setState(currentState);
         resetAnimation();//Shows gif on startup (don't mess with this)
@@ -323,6 +331,10 @@ public class MainActivity extends AppCompatActivity {
         requestURL += "&cycle_number=" + cycleNumber;
         requestURL += "&lock_state=1";
 
+        //Changed by G Buddies on 21-03-2016
+        //Additional parameter for cycle type
+        requestURL += "&cycle_type=" + cycleType;
+
         Log.i(TAG, requestURL);
 
         new DownloadTask().execute(requestURL);
@@ -330,8 +342,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    //Changed by G Buddies on 20-03-2016
-    private boolean requestUnlock(int cycleType) {
+    private boolean requestUnlock() {
         if (!checkConnection()) return false;
         currentState = State.REQUESTED_UNLOCK;
         setState(currentState);
@@ -357,23 +368,15 @@ public class MainActivity extends AppCompatActivity {
         String requestURL = "http://192.168.1.100:8080/";
         requestURL += "cyklo/"; // TODO: make cyklo dir changes in server and here
         requestURL += "res/";
-
-        //Changed by G Buddies on 20-03-2016
-        //Cycle original
-        if (cycleType == 0) {
-            requestURL += "request.php?";
-        }
-        //Cycle premium
-        if (cycleType == 1) {
-            //This file is same as request.php
-            requestURL += "request_premium.php?";
-        }
-
+        requestURL += "request.php?";
         requestURL += "name=" + name;
         requestURL += "&college=" + college;
         requestURL += "&number=" + number;
         requestURL += "&email=" + email;
         requestURL += "&lock_state=0";
+        //Changed by G Buddies on 21-03-2016
+        //Additional parameter for cycle type
+        requestURL += "&cycle_type=" + cycleType;
 
         Log.i(TAG, requestURL);
 
@@ -717,7 +720,13 @@ public class MainActivity extends AppCompatActivity {
                         editor.putInt("cycleNumber", cycleNumber);
                         editor.commit();
 
-                        tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+                        //Changed by G Buddies on 21-03-2016
+                        //To determine the cycle number based on cycle type
+                        if (cycleType == 0)
+                            tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+                        else if (cycleType == 1)
+                            tvCycleNumber.setText("Cycle Number: ".concat(PREMIUM_SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+
                         tvUserName.setText("Name: ".concat(details.getString("name", "")));
                         switch (currentState) {
                             case REQUESTED_UNLOCK:
@@ -740,7 +749,14 @@ public class MainActivity extends AppCompatActivity {
                     if (accepted == 1/*Request accepted*/) {
                         int cycleNumber = details.getInt("cycleNumber", 0);
                         if (cycleNumber != 0) {
-                            tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+
+                            //Changed by G Buddies on 21-03-2016
+                            //To determine the cycle number based on cycle type
+                            if (cycleType == 0)
+                                tvCycleNumber.setText("Cycle Number: ".concat(SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+                            else if (cycleType == 1)
+                                tvCycleNumber.setText("Cycle Number: ".concat(PREMIUM_SPECIAL_CYCLE_NUMBERS[cycleNumber - 1]));
+
                             tvUserName.setText("Name: ".concat(details.getString("name", "")));
                         }
                         switch (currentState) {
@@ -810,7 +826,9 @@ public class MainActivity extends AppCompatActivity {
                         requestURL += "0";
                     else
                         requestURL += "1";
-
+                    //Changed by G Buddies on 21-03-2016
+                    //Additional parameter for cycle type
+                    requestURL += "&cycle_type=" + cycleType;
                     Log.i(TAG, requestURL);
 
                     new DownloadTask().execute(requestURL);
